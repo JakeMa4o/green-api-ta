@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .main {
+            display: flex;
+            gap: 3rem;
+        }
+
+        .forms {
+            display: grid;
+            gap: 5rem;
+        }
+        .forms form {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .answer {
+            min-width: 20rem;
+            max-width: 20rem;
+        }
+        @media screen and (max-width: 700px) {
+            .answer{
+                min-width: 10rem;
+            }
+        }
+        .answer-field {
+            border: 1px solid #000;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="main">
+        <div class="forms">
+            <form class="settingsForm">
+                <input type="text" name="idInstance" class="idInstance" placeholder="idInstance" required>
+                <input type="text" name="apiTokenInstance" class="apiTokenInstance" placeholder="ApiTokenInstance" required>
+
+                <button class="getSettingsBtn" type="submit">getSettings</button>
+                <button class="getStateInstance" type="submit">getStateInstance</button>
+            </form>
+
+            <form class="messageForm">
+                <input class="messageNumber" type="text" placeholder="number" required>
+                <textarea class="message" placeholder="Message...   " required></textarea>
+
+                <button class="sendMessageBtn" type="submit">sendMessage</button>
+            </form>
+
+            <form class="fileByUrlForm">
+                <input class="messageNumber" type="text" placeholder="number" required>
+                <input class="fileUrl" type="text" placeholder="url..." required>
+
+                <button type="submit">sendFileByUrl</button>
+            </form>
+        </div>
+
+        <div class="answer">
+            Ответ:
+            <div class="answer-field">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const settingsForm = document.querySelector(".settingsForm");
+        const messageForm = document.querySelector(".messageForm");
+        const fileByUrlForm = document.querySelector(".fileByUrlForm");
+        const answerField = document.querySelector(".answer-field");
+
+        let wid = null;
+        const baseUrl = "https://7201.api.green-api.com";
+
+        const idInstance = document.querySelector(".idInstance");
+        const apiTokenInstance = document.querySelector(".apiTokenInstance");
+        const message = document.querySelector(".message");
+        const messageNumbers = document.querySelectorAll(".messageNumber");
+        const fileUrl = document.querySelector(".fileUrl");
+        
+
+        function settingsApiCall(endpoint) {
+            fetch(`${baseUrl}/waInstance${idInstance.value}/${endpoint}/${apiTokenInstance.value}`)
+            .then(res => res.json())
+            .then(data => {
+                answerField.innerHTML = JSON.stringify(data.wid);
+                messageNumbers.forEach(messageNumber => messageNumber.value = data.wid);
+            });
+        }
+
+        settingsForm.addEventListener("submit", (event) => {
+            event.preventDefault();
+
+            if (event.submitter.classList.contains("getSettingsBtn")) {
+                settingsApiCall("getSettings");
+            }
+
+            if (event.submitter.classList.contains("getStateInstance")) {
+                settingsApiCall("getStateInstance");
+            }
+        });
+
+        messageForm.addEventListener("submit", (event) => {
+            event.preventDefault();
+            fetch(`${baseUrl}/waInstance${idInstance.value}/sendMessage/${apiTokenInstance.value}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    chatId: messageNumbers[0].value,
+                    message: message.value,
+                }),
+            })
+            .then(res => res.json())
+            .then(data => answerField.innerHTML = JSON.stringify(data));
+        });
+
+        fileByUrlForm.addEventListener("submit", (event) => {
+            event.preventDefault();
+            fetch(`${baseUrl}/waInstance${idInstance.value}/sendFileByUrl/${apiTokenInstance.value}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    chatId: messageNumbers[0].value,
+                    urlFile: fileUrl.value,
+                    fileName: "фото пример", 
+                }),
+            })
+            .then(res => res.json())
+            .then(data => answerField.innerHTML = JSON.stringify(data));
+        });
+    </script>
+</body>
+</html>
